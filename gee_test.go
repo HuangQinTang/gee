@@ -13,9 +13,10 @@ func TestGee(t *testing.T) {
 	content := "hello world"
 
 	server := New()
-	server.GET(path, func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(content))
+	server.GET(path, func(c *Context) {
+		c.Data(http.StatusOK, []byte(content))
 	})
+
 	go server.Run(addr)
 
 	time.Sleep(time.Second * 1)
