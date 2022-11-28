@@ -93,6 +93,11 @@ func TestGee(t *testing.T) {
 		})
 	})
 
+	//测试异常捕获
+	r.GET("/panic", func(c *Context) {
+		panic("出错来了")
+		c.Data(http.StatusOK, []byte(""))
+	})
 	r.Run(addr)
 
 	// 测试用例
@@ -102,6 +107,7 @@ func TestGee(t *testing.T) {
 	// curl http://127.0.0.1:8080/assets/test.js
 	// curl http://127.0.0.1:8080/tmpl
 	// curl http://127.0.0.1:8080/students
+	// curl http://127.0.0.1:8080/panic
 }
 
 func testMiddleware(c *Context) {
