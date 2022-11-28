@@ -7,11 +7,16 @@ import (
 type HandlerFunc func(c *Context)
 
 type Engine struct {
-	router *router
+	*RouterGroup //继承路由组方法
+	router       *router
+	groups       []*RouterGroup // 当前已有路由组集合
 }
 
 func New() *Engine {
-	return &Engine{router: newRouter()}
+	engine := &Engine{router: newRouter()}
+	engine.RouterGroup = &RouterGroup{engine: engine}
+	engine.groups = []*RouterGroup{engine.RouterGroup}
+	return engine
 }
 
 // addRoute 添加路由
