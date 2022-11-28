@@ -29,6 +29,7 @@ func (engine *Engine) POST(pattern string, handler HandlerFunc) {
 
 // ServeHTTP 实现http.Handler接口
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	//请求响应对象封装到Context
 	c := newContext(w, req)
 	engine.router.handle(c)
 }
