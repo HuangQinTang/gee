@@ -1,6 +1,7 @@
 package gee
 
 import (
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -10,9 +11,11 @@ import (
 type HandlerFunc func(c *Context)
 
 type Engine struct {
-	*RouterGroup //继承路由组方法
-	router       *router
-	groups       []*RouterGroup // 当前已有路由组集合
+	*RouterGroup  //继承路由组方法
+	router        *router
+	groups        []*RouterGroup     // 当前已有路由组集合
+	htmlTemplates *template.Template // 保存模版
+	funcMap       template.FuncMap   // 自定义模板渲染函数
 }
 
 func New() *Engine {
@@ -50,6 +53,7 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// 请求响应对象封装到Context
 	c := newContext(w, req)
 	c.handlers = middlewares
+	c.engine = engine
 	engine.router.handle(c)
 }
 
@@ -67,4 +71,12 @@ func Logger() HandlerFunc {
 		// Calculate resolution time
 		log.Printf("[%d] %s in %v", c.StatusCode, c.Req.RequestURI, time.Since(t))
 	}
+}
+
+func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.funcMap = funcMap
+}
+
+func (engine *Engine) LoadHTMLGlob(pattern string) {
+	engine.htmlTemplates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
 }

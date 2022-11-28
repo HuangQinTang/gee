@@ -11,7 +11,7 @@ func TestRouterGroup(t *testing.T) {
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/", func(c *Context) {
-			c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
+			c.Data(http.StatusOK, []byte("Hello Gee"))
 		})
 		v1.GET("/test", func(c *Context) {
 			c.Data(http.StatusOK, []byte("v1 test"))

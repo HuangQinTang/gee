@@ -18,6 +18,7 @@ type Context struct {
 	StatusCode int                 //响应状态吗
 	handlers   []HandlerFunc       //中间价集合
 	index      int                 //记录当前执行到第几个中间件
+	engine     *Engine             //继承engine方法
 }
 
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -37,6 +38,11 @@ func (c *Context) Next() {
 	for ; c.index < s; c.index++ {
 		c.handlers[c.index](c)
 	}
+}
+
+func (c *Context) Fail(code int, err string) {
+	c.index = len(c.handlers) //程序失败后中间件集合无需往后执行
+	c.JSON(code, H{"message": err})
 }
 
 func (c *Context) Param(key string) string {
@@ -85,8 +91,10 @@ func (c *Context) Data(code int, data []byte) {
 }
 
 // HTML 返回Html字符串
-func (c *Context) HTML(code int, html string) {
+func (c *Context) HTML(code int, name string, data interface{}) {
 	c.SetHeader("Content-Type", "text/html")
 	c.SetStatus(code)
-	c.Writer.Write([]byte(html))
+	if err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
+		c.Fail(500, err.Error())
+	}
 }
