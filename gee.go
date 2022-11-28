@@ -1,7 +1,10 @@
 package gee
 
 import (
+	"log"
 	"net/http"
+	"strings"
+	"time"
 )
 
 type HandlerFunc func(c *Context)
@@ -34,11 +37,34 @@ func (engine *Engine) POST(pattern string, handler HandlerFunc) {
 
 // ServeHTTP 实现http.Handler接口
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	//请求响应对象封装到Context
+	var middlewares []HandlerFunc
+	// 添加默认中间件
+	middlewares = append(middlewares, Logger())
+	for _, group := range engine.groups {
+		// 收集当前请求路径需要执行到中间件
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middlewares...)
+		}
+	}
+
+	// 请求响应对象封装到Context
 	c := newContext(w, req)
+	c.handlers = middlewares
 	engine.router.handle(c)
 }
 
 func (engine *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, engine)
+}
+
+// Logger 全局默认中间件
+func Logger() HandlerFunc {
+	return func(c *Context) {
+		// Start timer
+		t := time.Now()
+		// Process request
+		c.Next()
+		// Calculate resolution time
+		log.Printf("[%d] %s in %v", c.StatusCode, c.Req.RequestURI, time.Since(t))
+	}
 }

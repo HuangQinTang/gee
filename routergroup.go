@@ -36,3 +36,9 @@ func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
 func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	group.addRoute("POST", pattern, handler)
 }
+
+// Use 加入中间件
+func (group *RouterGroup) Use(middlewares ...HandlerFunc) *RouterGroup {
+	group.middlewares = append(group.middlewares, middlewares...)
+	return group
+}

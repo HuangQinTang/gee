@@ -10,12 +10,14 @@ import (
 type H map[string]interface{}
 
 type Context struct {
-	Writer     http.ResponseWriter
-	Req        *http.Request
-	Path       string
-	Method     string
-	Params     map[string]string
-	StatusCode int
+	Writer     http.ResponseWriter //响应对象
+	Req        *http.Request       //请求对象
+	Path       string              //请求路径
+	Method     string              //请求方法
+	Params     map[string]string   //路由绑定到到请求参数
+	StatusCode int                 //响应状态吗
+	handlers   []HandlerFunc       //中间价集合
+	index      int                 //记录当前执行到第几个中间件
 }
 
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -24,6 +26,16 @@ func newContext(w http.ResponseWriter, req *http.Request) *Context {
 		Req:    req,
 		Path:   req.URL.Path,
 		Method: req.Method,
+		index:  -1,
+	}
+}
+
+// Next 执行下一个中间件
+func (c *Context) Next() {
+	c.index++
+	s := len(c.handlers)
+	for ; c.index < s; c.index++ {
+		c.handlers[c.index](c)
 	}
 }
 

@@ -84,10 +84,13 @@ func (r *router) handle(c *Context) {
 	//n 匹配到的路由树叶子节点 params如果路由需要匹配参数 这里则为map[参数名]参数值
 	n, params := r.getRoute(c.Method, c.Path)
 	if n != nil {
-		c.Params = params
 		key := c.Method + "-" + n.pattern
-		r.handlers[key](c)
+		c.Params = params
+		c.handlers = append(c.handlers, r.handlers[key]) //将当前handler加入中间件集合等待调用
 	} else {
-		c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		c.handlers = append(c.handlers, func(c *Context) {
+			c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		})
 	}
+	c.Next() //执行中间件件集合
 }
